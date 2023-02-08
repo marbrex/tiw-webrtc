@@ -4,3 +4,7 @@ yarn-error.log
 npm-debug.log
 .DS_Store
 /*.env
+
+########## OBSIDIAN ##########
+.obsidian/*
+!.obsidian/app.json
