@@ -24,6 +24,7 @@
     "space-before-function-paren": "off",
     "comma-dangle": ["error", "never"],
     "padded-blocks": ["error", { "classes": "never" }],
+    "brace-style": "off",
     "no-use-before-define": "off",
     "@typescript-eslint/no-use-before-define": [
       "error"

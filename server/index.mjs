@@ -37,16 +37,16 @@ io.on('connection', (socket) => {
   const allSocketIds = Array.from(io.sockets.sockets.keys())
 
   console.log('Sockets connected: ', allSocketIds.length)
-  socket.emit('all peers', {
+  socket.emit('fetch peers', {
     peerIds: allSocketIds.filter(id => id !== socket.id)
   })
 
-  socket.on('sending signal', payload => {
-    io.to(payload.to).emit('peer joined', { signal: payload.signal, callerID: payload.from })
+  socket.on('signal:offer', payload => {
+    io.to(payload.to).emit('receiving offer', { signal: payload.signal, from: payload.from })
   })
 
-  socket.on('returning signal', payload => {
-    io.to(payload.to).emit('receiving returned signal', { signal: payload.signal, from: socket.id })
+  socket.on('signal:answer', payload => {
+    io.to(payload.to).emit('receiving answer', { signal: payload.signal, from: socket.id })
   })
 
   socket.on('disconnect', () => {

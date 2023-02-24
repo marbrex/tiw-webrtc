@@ -1,5 +1,5 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
-import { initOnAllPeers, initOnPeerJoined } from '../websocket/listeners'
+import { initOnFetchPeers, initOnReceivingOffer } from '../websocket/listeners'
 import boardReducer from './slices/boardSlice'
 import peerReducer from './slices/peerSlice'
 import { customLogger } from './middleware'
@@ -14,8 +14,9 @@ export const store = configureStore({
   middleware: [customLogger]
 })
 
-initOnAllPeers(store.dispatch)
-initOnPeerJoined(store.dispatch, store.getState())
+console.log('in store init')
+initOnFetchPeers(store)
+initOnReceivingOffer(store)
 
 // Infer the `RootState` and `AppDispatch` types from the root reducer
 export type RootState = ReturnType<typeof rootReducer>

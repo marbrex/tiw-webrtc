@@ -1,5 +1,6 @@
+import { Store } from '@reduxjs/toolkit'
 import SimplePeer from 'simple-peer'
-import { AppDispatch, RootState } from '../store'
+import { RootState } from '../store'
 import { addPeer } from '../store/slices/peerSlice'
 import socket from './index'
 
@@ -9,7 +10,7 @@ interface CreatePeerParams {
 }
 
 const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
-  return new SimplePeer({
+  const peer = new SimplePeer({
     initiator: params.initiator,
     ...(params.stream ? { stream: params.stream } : {}),
     trickle: true, // useTrickle doit être a true pour que le peer persiste
@@ -20,15 +21,29 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
       ]
     }
   })
+
+  peer.on('error', err => {
+    console.error('Peer: error', err)
+  })
+
+  peer.on('connect', () => {
+    console.log('%c Peer: peer connected', 'color: #cc96f9')
+  })
+
+  peer.on('data', data => {
+    console.log('%c Peer: data received', 'color: #cc96f9', data)
+  })
+
+  return peer
 }
 
-interface OnAllPeersParams {
+interface OnFetchPeersParams {
   userToSignal: string
   callerId: string
   stream?: MediaStream
 }
 
-const onAllPeers = (params: OnAllPeersParams): SimplePeer.Instance => {
+const onFetchPeers = (params: OnFetchPeersParams): SimplePeer.Instance => {
   const peer: SimplePeer.Instance = createPeer({
     initiator: true,
     ...(params.stream ? { stream: params.stream } : {})
@@ -37,7 +52,8 @@ const onAllPeers = (params: OnAllPeersParams): SimplePeer.Instance => {
   // This event is automatically triggered
   // on creation of the peer if initiator is true
   peer.on('signal', signal => {
-    socket.emit('sending signal', {
+    console.log('%c Peer: signal:offer via Socket.io', 'color: #cc96f9', signal)
+    socket.emit('signal:offer', {
       signal,
       to: params.userToSignal,
       from: params.callerId
@@ -47,69 +63,87 @@ const onAllPeers = (params: OnAllPeersParams): SimplePeer.Instance => {
   return peer
 }
 
-export const initOnAllPeers = (dispatch: AppDispatch): void => {
-  socket.on('all peers', (payload: { peerIds: string[] }) => {
-    console.log('on all peers', payload)
+export const initOnFetchPeers = (store: Store<RootState>): void => {
+  socket.on('fetch peers', (payload: { peerIds: string[] }) => {
+    console.log('%c Socket: on fetch peers', 'color: #4ebd84', payload)
     const { peerIds } = payload
 
     // for each peer, create a connection
     peerIds.forEach((id: string) => {
-      const peer = onAllPeers({
+      const peer = onFetchPeers({
         userToSignal: id,
         callerId: socket.id
       })
 
       // add peer to the store
-      dispatch(addPeer({ id, peer }))
+      store.dispatch(addPeer({ id, peer }))
     })
+  })
+
+  socket.on('receiving answer', (payload: { signal: SimplePeer.SignalData, from: string }) => {
+    console.log('%c Socket: receiving answer', 'color: #4ebd84', payload)
+    const { signal, from } = payload
+    const distantPeer = store.getState().peer.peers[from]
+    if (distantPeer) distantPeer.signal(signal) // Accept the signal
   })
 }
 
-interface OnPeerJoinedParams {
-  incomingSignal: SimplePeer.SignalData
-  callerId: string
+interface OnReceivingOfferParams {
+  signal: SimplePeer.SignalData
+  from: string
   stream?: MediaStream
 }
 
-const onPeerJoined = (params: OnPeerJoinedParams): SimplePeer.Instance => {
+const onReceivingOffer = (params: OnReceivingOfferParams): SimplePeer.Instance => {
   const peer: SimplePeer.Instance = createPeer({
     initiator: false,
     ...(params.stream ? { stream: params.stream } : {})
   })
 
   peer.on('signal', signal => {
-    socket.emit('returning signal', {
+    console.log('%c Peer: signal:answer', 'color: #cc96f9', signal)
+    socket.emit('signal:answer', {
       signal,
-      to: params.callerId
+      to: params.from
     })
   })
-
-  // Accept incoming signal
-  peer.signal(params.incomingSignal)
 
   return peer
 }
 
-export const initOnPeerJoined = (dispatch: AppDispatch, state: RootState): void => {
-  socket.on('peer joined', (payload: { peerId: string, signal: SimplePeer.SignalData }) => {
-    console.log('on peer joined', payload)
-    const { peerId, signal } = payload
+export const initOnReceivingOffer = (store: Store<RootState>): void => {
+  socket.on('receiving offer', (payload: { from: string, signal: SimplePeer.SignalData }) => {
+    console.log('%c Socket: receiving offer', 'color: #4ebd84', payload)
+    const { from, signal } = payload
 
-    // create a connection to the new peer
-    const peer: SimplePeer.Instance = onPeerJoined({ callerId: peerId, incomingSignal: signal })
+    let peer: SimplePeer.Instance
+    // Since trickle is true, this event is triggered multiple times
+    // (1 offer, 1 answer and 2 candidate signals in each direction)
+    // Thus, we need to check the type of the signal
+    if (signal.type === 'offer') {
 
-    // add the peer to the store
-    dispatch(addPeer({ id: peerId, peer }))
-  })
+      // create a connection to the new peer
+      peer = onReceivingOffer({ from, signal })
 
-  socket.on('receiving returned signal', (payload: { signal: SimplePeer.SignalData, from: string }) => {
-    const { signal, from } = payload
-    const distantPeer = state.peer.peers[from]
-    if (distantPeer) distantPeer.signal(signal) // Accept the signal
+      // add the peer to the store
+      store.dispatch(addPeer({ id: from, peer }))
+    }
+    else if (signal.type === 'candidate') {
+      console.log('state', store.getState())
+      peer = store.getState().peer.peers[from]
+    }
+    else {
+      console.error('Unknown signal type')
+      return
+    }
+
+    // Accept incoming signal
+    peer.signal(signal)
+
   })
 }
 
 export default {
-  initOnPeerJoined,
-  initOnAllPeers
+  initOnReceivingOffer,
+  initOnFetchPeers
 }
