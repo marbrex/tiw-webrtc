@@ -4,8 +4,12 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 interface AppState {
   playerPosition: [number, number]
   playerAvatar: string
-  remotePlayerPosition: [number, number]
-  remotePlayerAvatar: string
+  remotePlayers: {
+    [peerId: string]: {
+      position: [number, number];
+      avatar: string
+    }
+  }
   board: {
     width: number
     height: number
@@ -13,12 +17,16 @@ interface AppState {
   }
 }
 
+const initialRemotePlayer = {
+  position: [0, 0],
+  avatar: ''
+}
+
 // Define the initial state using that type
 const initialState: AppState = {
   playerPosition: [10, 24],
   playerAvatar: '',
-  remotePlayerPosition: [0, 0],
-  remotePlayerAvatar: '',
+  remotePlayers: {},
   board: {
     width: 60,
     height: 60,
@@ -34,7 +42,6 @@ export const boardSlice = createSlice({
     // Use the PayloadAction type to declare the contents of `action.payload`
     movePlayer: {
       reducer(state, action: PayloadAction<[number, number]>) {
-        console.log(action)
         state.playerPosition = action.payload
       },
       prepare(payload: [number, number], propagate: boolean) {
@@ -42,24 +49,44 @@ export const boardSlice = createSlice({
       }
     },
     setAvatar: {
-      reducer(state, action: PayloadAction<[string, string]>) {
-        console.log(action)
-        if (action.payload[1] === 'local') {
-          state.playerAvatar = action.payload[0]
-        }
-        if (action.payload[1] === 'remote') {
-          state.remotePlayerAvatar = action.payload[0]
-        }
+      reducer(state, action: PayloadAction<string>) {
+        state.playerAvatar = action.payload
       },
-      prepare(payload: [string, string], propagate: boolean) {
+      prepare(payload: string) {
+        return { payload }
+      }
+    },
+    setPlayer: {
+      reducer(state, action: PayloadAction<RemotePlayerParams>) {
+        const { peerId, position, avatar } = action.payload
+        state.remotePlayers[peerId] = Object.assign(state.remotePlayers[peerId] || initialRemotePlayer, {
+          ...(position ? { position } : {}),
+          ...(avatar ? { avatar } : {})
+        })
+      },
+      prepare(payload: RemotePlayerParams) {
+        return { payload }
+      }
+    },
+    removePlayer: {
+      reducer(state, action: PayloadAction<string>) {
+        delete state.remotePlayers[action.payload]
+      },
+      prepare(payload: string, propagate: boolean) {
         return { payload, meta: { propagate } }
       }
     }
   }
 })
 
+interface RemotePlayerParams {
+  peerId: string
+  position?: [number, number]
+  avatar?: string
+}
+
 // Action creators are generated for each case reducer function
-export const { movePlayer, setAvatar } = boardSlice.actions
+export const { movePlayer, setAvatar, setPlayer, removePlayer } = boardSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 // export const selectCount = (state: RootState) => state.slidesApp.value

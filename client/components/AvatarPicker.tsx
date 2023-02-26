@@ -21,7 +21,7 @@ export const AvatarPicker: React.FC = () => {
     (event) => {
       console.log(event)
       const name = event.currentTarget.id
-      dispatch(setAvatar([name, 'local'], true))
+      dispatch(setAvatar(name))
     },
     [playerAvatar]
   )

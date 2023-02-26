@@ -1,6 +1,7 @@
 import { Store } from '@reduxjs/toolkit'
 import SimplePeer from 'simple-peer'
-import { RootState } from '../store'
+import { RootState, store } from '../store'
+import { setPlayer } from '../store/slices/boardSlice'
 import { addPeer } from '../store/slices/peerSlice'
 import socket from './index'
 
@@ -28,10 +29,35 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
 
   peer.on('connect', () => {
     console.log('%c Peer: peer connected', 'color: #cc96f9')
+    peer.send(`{ "type": "info", "payload": "Hello from peer ${socket.id}" }`)
   })
 
   peer.on('data', data => {
-    console.log('%c Peer: data received', 'color: #cc96f9', data)
+    const json = JSON.parse(data.toString()) as PeerMessage
+    console.group(`%c Peer: data received [${json.type}]`, 'color: #cc96f9')
+    let payload
+    switch (json.type) {
+      case 'info':
+        payload = json.payload as string // text message
+        console.log(payload)
+        break
+      case 'player:setAvatar':
+        payload = json.payload as { avatar: string, position: [number, number] } // name of the avatar
+        store.dispatch(setPlayer({ peerId: json.from, avatar: payload.avatar, position: payload.position }))
+        break
+      case 'player:movePlayer':
+        payload = json.payload as [number, number] // position of the player
+        store.dispatch(setPlayer({ peerId: json.from, position: payload }))
+        break
+      default:
+        console.error('Unknown message type')
+        break
+    }
+    console.groupEnd()
+  })
+
+  peer.on('stream', stream => {
+    console.log('%c Peer: stream received', 'color: #cc96f9', stream)
   })
 
   return peer

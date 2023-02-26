@@ -14,16 +14,15 @@ import { AvatarPicker } from './AvatarPicker'
 
 export const Board: React.FC = () => {
   const board = useAppSelector((state) => state.board)
-  const playerPosition: [number, number] = useAppSelector(
-    (state) => state.board.playerPosition
-  )
-  const remotePlayerPosition: [number, number] = useAppSelector(
-    (state) => state.board.remotePlayerPosition
-  )
-  const playerAvatar: string = useAppSelector((state) => state.board.playerAvatar)
-  const remotePlayerAvatar: string = useAppSelector(
-    (state) => state.board.remotePlayerAvatar
-  )
+  const playerPosition = useAppSelector(state => state.board.playerPosition)
+  const playerAvatar = useAppSelector((state) => state.board.playerAvatar)
+  const remotePlayers = useAppSelector(state => state.board.remotePlayers)
+  const remotePositions = Object.values(remotePlayers).map(value => {
+    return {
+      position: value.position[1] * board.board.width + value.position[0],
+      avatar: value.avatar
+    }
+  })
 
   const dispatch = useDispatch<AppDispatch>()
 
@@ -84,7 +83,7 @@ export const Board: React.FC = () => {
     return ''
   }
 
-  const displayPlayers = () => {
+  const displayPlayers = useCallback(() => {
     let i = 0
     const grid = []
     for (i = 0; i < board.board.width * board.board.height; i++) {
@@ -95,20 +94,21 @@ export const Board: React.FC = () => {
           </div>
         )
       } else if (
-        i ===
-        remotePlayerPosition[1] * board.board.width + remotePlayerPosition[0]
+        remotePositions.filter(peer => peer.position === i).length > 0
       ) {
-        grid.push(
-          <div style={cellStyle} key={i}>
-            <img src={avatarImg(remotePlayerAvatar)}></img>
-          </div>
-        )
+        remotePositions.filter(peer => peer.position === i).forEach(peer => {
+          grid.push(
+            <div style={cellStyle} key={i}>
+              <img src={avatarImg(peer.avatar)}></img>
+            </div>
+          )
+        })
       } else {
         grid.push(<div style={cellStyle} key={i}></div>)
       }
     }
     return grid
-  }
+  }, [remotePositions, remotePlayers])
 
   useEffect(() => {
     window.addEventListener('keydown', keyDownHandler)
