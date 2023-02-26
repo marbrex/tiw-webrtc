@@ -11,6 +11,7 @@ import adam from '../img/Adam.png'
 import amelia from '../img/Amelia.png'
 import { useCallback, useEffect } from 'react'
 import { AvatarPicker } from './AvatarPicker'
+import VideoContainer from './VideoContainer'
 
 export const Board: React.FC = () => {
   const board = useAppSelector((state) => state.board)
@@ -126,6 +127,7 @@ export const Board: React.FC = () => {
         <AvatarPicker></AvatarPicker>
         <div className="item h-48">Video1 Placeholder</div>
         <div className="item h-48">Video2 Placeholder</div>
+        <VideoContainer />
       </div>
     </div>
   )

@@ -3,10 +3,12 @@ import { initOnFetchPeers, initOnReceivingOffer } from '../websocket/listeners'
 import boardReducer from './slices/boardSlice'
 import peerReducer from './slices/peerSlice'
 import { customLogger } from './middleware'
+import videoSlice from './slices/videoSlice'
 
 const rootReducer = combineReducers({
   board: boardReducer,
-  peer: peerReducer
+  peer: peerReducer,
+  video: videoSlice
 })
 
 export const store = configureStore({
