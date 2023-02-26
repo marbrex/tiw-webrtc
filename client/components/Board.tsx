@@ -44,7 +44,7 @@ export const Board: React.FC = () => {
         newPosition = [(playerPosition[0] + 1) % board.board.width, playerPosition[1]]
       }
       console.log(newPosition)
-      dispatch(movePlayer(newPosition, false))
+      dispatch(movePlayer(newPosition))
     },
     [playerPosition]
   )

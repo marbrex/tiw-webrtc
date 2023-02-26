@@ -40,41 +40,23 @@ export const boardSlice = createSlice({
   initialState,
   reducers: {
     // Use the PayloadAction type to declare the contents of `action.payload`
-    movePlayer: {
-      reducer(state, action: PayloadAction<[number, number]>) {
-        state.playerPosition = action.payload
-      },
-      prepare(payload: [number, number], propagate: boolean) {
-        return { payload, meta: { propagate } }
-      }
+    movePlayer: (state, action: PayloadAction<[number, number]>) => {
+      state.playerPosition = action.payload
     },
-    setAvatar: {
-      reducer(state, action: PayloadAction<string>) {
-        state.playerAvatar = action.payload
-      },
-      prepare(payload: string) {
-        return { payload }
-      }
+    setAvatar: (state, action: PayloadAction<string>) => {
+      state.playerAvatar = action.payload
     },
-    setPlayer: {
-      reducer(state, action: PayloadAction<RemotePlayerParams>) {
-        const { peerId, position, avatar } = action.payload
-        state.remotePlayers[peerId] = Object.assign(state.remotePlayers[peerId] || initialRemotePlayer, {
+    setPlayer: (state, action: PayloadAction<RemotePlayerParams>) => {
+      const { peerId, position, avatar } = action.payload
+      state.remotePlayers[peerId] = Object.assign({},
+        state.remotePlayers[peerId] || initialRemotePlayer, {
           ...(position ? { position } : {}),
           ...(avatar ? { avatar } : {})
-        })
-      },
-      prepare(payload: RemotePlayerParams) {
-        return { payload }
-      }
+        }
+      )
     },
-    removePlayer: {
-      reducer(state, action: PayloadAction<string>) {
-        delete state.remotePlayers[action.payload]
-      },
-      prepare(payload: string, propagate: boolean) {
-        return { payload, meta: { propagate } }
-      }
+    removePlayer: (state, action: PayloadAction<string>) => {
+      delete state.remotePlayers[action.payload]
     }
   }
 })
