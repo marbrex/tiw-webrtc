@@ -1,8 +1,8 @@
 import { Store } from '@reduxjs/toolkit'
 import SimplePeer from 'simple-peer'
 import { RootState, store } from '../store'
-import { setPlayer } from '../store/slices/boardSlice'
-import { addPeer } from '../store/slices/peerSlice'
+import { removePlayer, setPlayer } from '../store/slices/boardSlice'
+import { addPeer, removePeer } from '../store/slices/peerSlice'
 import socket from './index'
 
 interface CreatePeerParams {
@@ -31,17 +31,16 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
     console.log('%c Peer: peer connected', 'color: #cc96f9')
     peer.send(`{ "type": "info", "payload": "Hello from peer ${socket.id}" }`)
 
-    Object.entries(store.getState().peer.peers)
-      .filter(([, peer]) => peer.connected)
-      .forEach(([id, peer]) => {
-        console.log('%c Peer: Sending position to peer ' + id, 'color: #cc96f9')
-        const message: PeerMessage = {
-          type: 'request:player',
-          from: socket.id,
-          payload: {}
-        }
-        peer.send(JSON.stringify(message))
-      })
+    console.log("%c Peer: Providing player's info to newly connected peer", 'color: #cc96f9')
+    const message: PeerMessage = {
+      type: 'player:setAvatar',
+      from: socket.id,
+      payload: {
+        avatar: store.getState().board.playerAvatar,
+        position: store.getState().board.playerPosition
+      }
+    }
+    peer.send(JSON.stringify(message))
   })
 
   peer.on('data', data => {
@@ -61,17 +60,6 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
         payload = json.payload as [number, number] // position of the player
         store.dispatch(setPlayer({ peerId: json.from, position: payload }))
         break
-      case 'request:player':
-        payload = {
-          type: 'player:setAvatar',
-          from: socket.id,
-          payload: {
-            avatar: store.getState().board.playerAvatar,
-            position: store.getState().board.playerPosition
-          }
-        }
-        store.getState().peer.peers[json.from].send(JSON.stringify(payload))
-        break
       default:
         console.error('Unknown message type')
         break
@@ -81,6 +69,18 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
 
   peer.on('stream', stream => {
     console.log('%c Peer: stream received', 'color: #cc96f9', stream)
+  })
+
+  peer.on('close', () => {
+    console.log('%c Peer: connection closed', 'color: #cc96f9')
+
+    const peers = store.getState().peer.peers
+    const id = Object.keys(peers).find(k => peers[k] === peer)
+    if (id) {
+      console.log('%c Peer: Closing connection ' + id, 'color: #cc96f9')
+      store.dispatch(removePeer(id))
+      store.dispatch(removePlayer(id))
+    }
   })
 
   return peer

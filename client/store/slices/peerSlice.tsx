@@ -18,6 +18,9 @@ export const peerSlice = createSlice({
     addPeer: (state, action: PayloadAction<PayloadAddPeer>) => {
       const { id, peer } = action.payload
       state.peers[id] = peer
+    },
+    removePeer: (state, action: PayloadAction<string>) => {
+      delete state.peers[action.payload]
     }
   }
 })
@@ -27,6 +30,6 @@ interface PayloadAddPeer {
   peer: SimplePeer.Instance
 }
 
-export const { addPeer } = peerSlice.actions
+export const { addPeer, removePeer } = peerSlice.actions
 
 export default peerSlice.reducer
