@@ -30,6 +30,18 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
   peer.on('connect', () => {
     console.log('%c Peer: peer connected', 'color: #cc96f9')
     peer.send(`{ "type": "info", "payload": "Hello from peer ${socket.id}" }`)
+
+    Object.entries(store.getState().peer.peers)
+      .filter(([, peer]) => peer.connected)
+      .forEach(([id, peer]) => {
+        console.log('%c Peer: Sending position to peer ' + id, 'color: #cc96f9')
+        const message: PeerMessage = {
+          type: 'request:player',
+          from: socket.id,
+          payload: {}
+        }
+        peer.send(JSON.stringify(message))
+      })
   })
 
   peer.on('data', data => {
@@ -42,12 +54,23 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
         console.log(payload)
         break
       case 'player:setAvatar':
-        payload = json.payload as { avatar: string, position: [number, number] } // name of the avatar
+        payload = json.payload as { avatar: string, position: [number, number] }
         store.dispatch(setPlayer({ peerId: json.from, avatar: payload.avatar, position: payload.position }))
         break
       case 'player:movePlayer':
         payload = json.payload as [number, number] // position of the player
         store.dispatch(setPlayer({ peerId: json.from, position: payload }))
+        break
+      case 'request:player':
+        payload = {
+          type: 'player:setAvatar',
+          from: socket.id,
+          payload: {
+            avatar: store.getState().board.playerAvatar,
+            position: store.getState().board.playerPosition
+          }
+        }
+        store.getState().peer.peers[json.from].send(JSON.stringify(payload))
         break
       default:
         console.error('Unknown message type')
