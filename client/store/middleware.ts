@@ -6,21 +6,21 @@ export const customLogger: Middleware<Dispatch, RootState> = api => next => {
   return (action: AnyAction) => {
     const prevState = api.getState()
 
-    console.group('%c ===[ Custom Logger ]===', 'color: #00bfff; font-weight: bold; background-color: #151F28; border-radius: 3px;')
+    console.groupCollapsed(`%c [Middleware] ${action.type}`, 'color: #00bfff; font-weight: bold; background-color: #151F28; border-radius: 3px;')
 
     console.group('%c Action: ' + action.type, 'color: #ff7de9;')
-    console.log(action)
+    console.dir(action)
     console.groupEnd()
 
     console.group('%c Prev state:', 'color: #ff6c37;')
-    console.log(prevState)
+    console.dir(prevState)
     console.groupEnd()
 
     const result = next(action)
     const nextState = api.getState()
 
     console.group('%c Next state:', 'color: #92e400;')
-    console.log(nextState)
+    console.dir(nextState)
     console.groupEnd()
 
     switch (action.type) {
@@ -54,6 +54,15 @@ export const customLogger: Middleware<Dispatch, RootState> = api => next => {
               payload: nextState.board.playerPosition
             }
             peer.send(JSON.stringify(message))
+          })
+        break
+      case 'video/setLocalStream':
+        Object.entries(nextState.peer.peers)
+          .filter(([, peer]) => peer.connected)
+          .forEach(([id, peer]) => {
+            console.log('%c Peer: Sending stream to peer ' + id, 'color: #cc96f9')
+            const stream = nextState.video.stream.clone()
+            peer.addStream(stream)
           })
         break
       default:

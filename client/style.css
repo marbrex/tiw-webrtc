@@ -26,3 +26,19 @@ button {
 		border-4 
 		rounded-md;
 }
+
+#video-container {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	padding: 5px;
+}
+
+.video-frame {
+	width: 200px;
+	height: 200px;
+	padding: 10px;
+	border-radius: 5px;
+	overflow: hidden;
+}

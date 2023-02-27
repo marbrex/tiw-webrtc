@@ -3,6 +3,7 @@ import SimplePeer from 'simple-peer'
 import { RootState, store } from '../store'
 import { removePlayer, setPlayer } from '../store/slices/boardSlice'
 import { addPeer, removePeer } from '../store/slices/peerSlice'
+import { setRemoteStream } from '../store/slices/videoSlice'
 import socket from './index'
 
 interface CreatePeerParams {
@@ -28,10 +29,10 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
   })
 
   peer.on('connect', () => {
-    console.log('%c Peer: peer connected', 'color: #cc96f9')
+    console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Connected`, 'color: #cc96f9')
     peer.send(`{ "type": "info", "payload": "Hello from peer ${socket.id}" }`)
 
-    console.log("%c Peer: Providing player's info to newly connected peer", 'color: #cc96f9')
+    console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Providing player's info to newly connected peer`, 'color: #cc96f9')
     const message: PeerMessage = {
       type: 'player:setAvatar',
       from: socket.id,
@@ -41,11 +42,19 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
       }
     }
     peer.send(JSON.stringify(message))
+
+    if (params.initiator) {
+      if (store.getState().video.stream) {
+        console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Providing stream to newly connected peer`, 'color: #cc96f9')
+        const stream = store.getState().video.stream.clone()
+        peer.addStream(stream)
+      }
+    }
   })
 
   peer.on('data', data => {
     const json = JSON.parse(data.toString()) as PeerMessage
-    console.group(`%c Peer: data received [${json.type}]`, 'color: #cc96f9')
+    console.group(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Data received "${json.type}"`, 'color: #cc96f9')
     let payload
     switch (json.type) {
       case 'info':
@@ -68,16 +77,23 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
   })
 
   peer.on('stream', stream => {
-    console.log('%c Peer: stream received', 'color: #cc96f9', stream)
-  })
-
-  peer.on('close', () => {
-    console.log('%c Peer: connection closed', 'color: #cc96f9')
+    console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Stream received`, 'color: #cc96f9', stream)
 
     const peers = store.getState().peer.peers
     const id = Object.keys(peers).find(k => peers[k] === peer)
     if (id) {
-      console.log('%c Peer: Closing connection ' + id, 'color: #cc96f9')
+      console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Adding stream of ${id}`, 'color: #cc96f9')
+      store.dispatch(setRemoteStream({ peerId: id, stream }))
+    }
+  })
+
+  peer.on('close', () => {
+    console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Connection closed`, 'color: #cc96f9')
+
+    const peers = store.getState().peer.peers
+    const id = Object.keys(peers).find(k => peers[k] === peer)
+    if (id) {
+      console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Removing peer from the store ${id}`, 'color: #cc96f9')
       store.dispatch(removePeer(id))
       store.dispatch(removePlayer(id))
     }
@@ -101,8 +117,9 @@ const onFetchPeers = (params: OnFetchPeersParams): SimplePeer.Instance => {
   // This event is automatically triggered
   // on creation of the peer if initiator is true
   peer.on('signal', signal => {
-    console.log('%c Peer: signal:offer via Socket.io', 'color: #cc96f9', signal)
-    socket.emit('signal:offer', {
+    console.log(`%c [Peer] Initiator: sending "${signal.type}" via Socket.io`, 'color: #cc96f9', signal)
+
+    socket.emit(`signal:${signal.type}`, {
       signal,
       to: params.userToSignal,
       from: params.callerId
@@ -113,8 +130,8 @@ const onFetchPeers = (params: OnFetchPeersParams): SimplePeer.Instance => {
 }
 
 export const initOnFetchPeers = (store: Store<RootState>): void => {
-  socket.on('fetch peers', (payload: { peerIds: string[] }) => {
-    console.log('%c Socket: on fetch peers', 'color: #4ebd84', payload)
+  socket.on('fetch', (payload: { peerIds: string[] }) => {
+    console.log(`%c [Socket] Received ${payload.peerIds.length} existing peers`, 'color: #4ebd84', payload)
     const { peerIds } = payload
 
     // for each peer, create a connection
@@ -127,13 +144,6 @@ export const initOnFetchPeers = (store: Store<RootState>): void => {
       // add peer to the store
       store.dispatch(addPeer({ id, peer }))
     })
-  })
-
-  socket.on('receiving answer', (payload: { signal: SimplePeer.SignalData, from: string }) => {
-    console.log('%c Socket: receiving answer', 'color: #4ebd84', payload)
-    const { signal, from } = payload
-    const distantPeer = store.getState().peer.peers[from]
-    if (distantPeer) distantPeer.signal(signal) // Accept the signal
   })
 }
 
@@ -150,10 +160,12 @@ const onReceivingOffer = (params: OnReceivingOfferParams): SimplePeer.Instance =
   })
 
   peer.on('signal', signal => {
-    console.log('%c Peer: signal:answer', 'color: #cc96f9', signal)
-    socket.emit('signal:answer', {
+    console.log(`%c [Peer] Sending "${signal.type}" via Socket.io`, 'color: #cc96f9', signal)
+
+    socket.emit(`signal:${signal.type}`, {
       signal,
-      to: params.from
+      to: params.from,
+      from: socket.id
     })
   })
 
@@ -161,15 +173,23 @@ const onReceivingOffer = (params: OnReceivingOfferParams): SimplePeer.Instance =
 }
 
 export const initOnReceivingOffer = (store: Store<RootState>): void => {
-  socket.on('receiving offer', (payload: { from: string, signal: SimplePeer.SignalData }) => {
-    console.log('%c Socket: receiving offer', 'color: #4ebd84', payload)
+  socket.on('signal:offer', (payload: { from: string, signal: SimplePeer.SignalData }) => {
+    console.log('%c [Socket] Received offer', 'color: #4ebd84', payload)
     const { from, signal } = payload
 
+    // Attention !
+    // Have to search for the peer in the store
+    // because for any future renegotiation, the peer
+    // will already be in the store
     let peer: SimplePeer.Instance
-    // Since trickle is true, this event is triggered multiple times
-    // (1 offer, 1 answer and 2 candidate signals in each direction)
-    // Thus, we need to check the type of the signal
-    if (signal.type === 'offer') {
+
+    // => Find the peer in the store
+    peer = store.getState().peer.peers[from]
+
+    // If the peer is not in the store
+    // (i.e. an unknown peer)
+    // => create a new one
+    if (!peer) {
 
       // create a connection to the new peer
       peer = onReceivingOffer({ from, signal })
@@ -177,22 +197,46 @@ export const initOnReceivingOffer = (store: Store<RootState>): void => {
       // add the peer to the store
       store.dispatch(addPeer({ id: from, peer }))
     }
-    else if (signal.type === 'candidate') {
-      console.log('state', store.getState())
-      peer = store.getState().peer.peers[from]
-    }
-    else {
-      console.error('Unknown signal type')
-      return
-    }
 
     // Accept incoming signal
+    // And trigger the SimplePeer's "signal" event (on.('signal', ...)
     peer.signal(signal)
+  })
+}
 
+export const initOnReceivingAnswer = (store: Store<RootState>): void => {
+  socket.on('signal:answer', (payload: { signal: SimplePeer.SignalData, from: string }) => {
+    console.log('%c [Socket] Received answer', 'color: #4ebd84', payload)
+    const { from, signal } = payload
+
+    // Find the peer in the store
+    const peer: SimplePeer.Instance = store.getState().peer.peers[from]
+
+    // Accept incoming signal
+    // And trigger the SimplePeer's "signal" event (on.('signal', ...)
+    if (peer) peer.signal(signal)
+    else console.error('Peer not found')
+  })
+}
+
+export const initOnReceivingCandidate = (store: Store<RootState>): void => {
+  socket.on('signal:candidate', (payload: { from: string, signal: SimplePeer.SignalData }) => {
+    console.log('%c [Socket] Received candidate', 'color: #4ebd84', payload)
+    const { from, signal } = payload
+
+    // Find the peer in the store
+    const peer: SimplePeer.Instance = store.getState().peer.peers[from]
+
+    // Accept incoming signal
+    // And trigger the SimplePeer's "signal" event (on.('signal', ...)
+    if (peer) peer.signal(signal)
+    else console.error('Peer not found')
   })
 }
 
 export default {
   initOnReceivingOffer,
+  initOnReceivingAnswer,
+  initOnReceivingCandidate,
   initOnFetchPeers
 }

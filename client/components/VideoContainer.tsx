@@ -1,3 +1,4 @@
+/* eslint-disable no-return-assign */
 import React, { useRef } from 'react'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
 import { setLocalStream } from '../store/slices/videoSlice'
@@ -23,12 +24,33 @@ const VideoContainer: React.FC = () => {
       })
   }, [])
 
-  const peers = useAppSelector(state => state.peer.peers)
+  const peers = useAppSelector(state => state.video.peers)
+  const remoteVideoRef = useRef<{
+    [peerId: string]: HTMLVideoElement
+  }>({})
+
+  React.useEffect(() => {
+    Object.keys(peers).forEach(id => {
+      const stream = peers[id]
+      if (remoteVideoRef.current[id]) {
+        remoteVideoRef.current[id].srcObject = stream
+      }
+    })
+  }, [peers])
 
   return (
     <div id='video-container'>
-      <VideoFrame id={socket.id} ref={localVideoRef} />
-      { Object.keys(peers).map(id => <VideoFrame id={id} />) }
+      <VideoFrame id={socket.id} local ref={localVideoRef} />
+      {
+        Object.keys(peers).map(id => {
+          return <>
+            <VideoFrame
+              id={id}
+              ref={r => remoteVideoRef.current[id] = r}
+            />
+          </>
+        })
+      }
     </div>
   )
 }

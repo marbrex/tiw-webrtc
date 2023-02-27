@@ -29,8 +29,8 @@ export const Board: React.FC = () => {
 
   const keyDownHandler = useCallback(
     (event) => {
-      console.log(event.code)
-      console.log(playerPosition)
+      // console.log(event.code)
+      // console.log(playerPosition)
       let newPosition = playerPosition
       if (event.code === 'ArrowUp') {
         newPosition = [playerPosition[0], (playerPosition[1] - 1) % board.board.width]
@@ -44,8 +44,8 @@ export const Board: React.FC = () => {
       if (event.code === 'ArrowRight') {
         newPosition = [(playerPosition[0] + 1) % board.board.width, playerPosition[1]]
       }
-      console.log(newPosition)
-      dispatch(movePlayer(newPosition))
+      // console.log(newPosition)
+      if (newPosition !== playerPosition) dispatch(movePlayer(newPosition))
     },
     [playerPosition]
   )
@@ -125,8 +125,6 @@ export const Board: React.FC = () => {
       </div>
       <div className="flex-grow-0 flex-col space-y-2">
         <AvatarPicker></AvatarPicker>
-        <div className="item h-48">Video1 Placeholder</div>
-        <div className="item h-48">Video2 Placeholder</div>
         <VideoContainer />
       </div>
     </div>

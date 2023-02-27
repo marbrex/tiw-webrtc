@@ -2,15 +2,16 @@ import React from 'react'
 
 interface VideoFrameProps {
   id: string
+  local?: boolean
 }
 
 const VideoFrame = React.forwardRef<HTMLVideoElement, VideoFrameProps>(
-  ({ id }, ref) => {
+  ({ id, local = false }, ref) => {
     return (
       <>
-        <video className='item h-48'
+        <video className='video-frame'
           id={id} ref={ref}
-          autoPlay playsInline
+          autoPlay playsInline muted={local}
         />
       </>
     )
