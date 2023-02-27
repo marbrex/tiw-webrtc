@@ -236,9 +236,12 @@ export const initOnReceivingCandidate = (store: Store<RootState>): void => {
   })
 }
 
-export default {
-  initOnReceivingOffer,
-  initOnReceivingAnswer,
-  initOnReceivingCandidate,
-  initOnFetchPeers
+const initListeners = (store: Store<RootState>): void => {
+  console.log('Initializing listeners...')
+  initOnFetchPeers(store)
+  initOnReceivingOffer(store)
+  initOnReceivingAnswer(store)
+  initOnReceivingCandidate(store)
 }
+
+export default initListeners

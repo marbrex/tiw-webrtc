@@ -1,5 +1,5 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
-import { initOnFetchPeers, initOnReceivingAnswer, initOnReceivingCandidate, initOnReceivingOffer } from '../websocket/listeners'
+import initListeners from '../websocket/listeners'
 import boardReducer from './slices/boardSlice'
 import peerReducer from './slices/peerSlice'
 import { customLogger } from './middleware'
@@ -16,11 +16,7 @@ export const store = configureStore({
   middleware: [customLogger]
 })
 
-console.log('in store init')
-initOnFetchPeers(store)
-initOnReceivingOffer(store)
-initOnReceivingAnswer(store)
-initOnReceivingCandidate(store)
+initListeners(store)
 
 // Infer the `RootState` and `AppDispatch` types from the root reducer
 export type RootState = ReturnType<typeof rootReducer>
