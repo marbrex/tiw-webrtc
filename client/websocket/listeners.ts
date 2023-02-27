@@ -43,18 +43,14 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
     }
     peer.send(JSON.stringify(message))
 
-    // Need to check if the current peer is the initiator
-    // because otherwise there is a need to RENEGOTIATE the connection
-    if (params.initiator) {
-      // Provide stream to the distant peer
-      // There is another code in the middleware that does the same thing
-      // But this one is needed because the Redux action might be called before the peer is connected
-      // and hence the stream would not be provided to the distant peer
-      if (store.getState().video.stream) {
-        console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Providing stream to newly connected peer`, 'color: #cc96f9')
-        const stream = store.getState().video.stream.clone()
-        peer.addStream(stream)
-      }
+    // Provide stream to the distant peer
+    // There is another code in the middleware that does the same thing
+    // But this one is needed because the Redux action might be called before the peer is connected
+    // and hence the stream would not be provided to the distant peer
+    if (store.getState().video.stream) {
+      console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Providing stream to newly connected peer`, 'color: #cc96f9')
+      const stream = store.getState().video.stream.clone()
+      peer.addStream(stream)
     }
   })
 
