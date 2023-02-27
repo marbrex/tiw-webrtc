@@ -3,7 +3,7 @@ import SimplePeer from 'simple-peer'
 import { RootState, store } from '../store'
 import { removePlayer, setPlayer } from '../store/slices/boardSlice'
 import { addPeer, removePeer } from '../store/slices/peerSlice'
-import { setRemoteStream } from '../store/slices/videoSlice'
+import { removeRemoteStream, setRemoteStream } from '../store/slices/videoSlice'
 import socket from './index'
 
 interface CreatePeerParams {
@@ -98,6 +98,7 @@ const createPeer = (params: CreatePeerParams): SimplePeer.Instance => {
       console.log(`%c [Peer]${params.initiator ? ' Initiator:' : ''} Removing peer from the store ${id}`, 'color: #cc96f9')
       store.dispatch(removePeer(id))
       store.dispatch(removePlayer(id))
+      store.dispatch(removeRemoteStream(id))
     }
   })
 

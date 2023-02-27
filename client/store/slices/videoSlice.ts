@@ -35,5 +35,5 @@ interface RemoteStreamProps {
   stream: MediaStream
 }
 
-export const { setLocalStream, setRemoteStream } = videoSlice.actions
+export const { setLocalStream, setRemoteStream, removeRemoteStream } = videoSlice.actions
 export default videoSlice.reducer
