@@ -1,0 +1,6 @@
+.obsidian/
+.vscode/
+dist/
+node_modules/
+.editorconfig
+.hintrc
