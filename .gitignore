@@ -1,11 +1,10 @@
-node_modules
 dist
-yarn-error.log
-npm-debug.log
 .DS_Store
 /*.env
 
 ########## YARN ##########
+# Not using Yarn Zero-Installs, so ignore the cache
+# But using it to generate Docker images, so keep the cache in .dockerignore
 .pnp.*
 .yarn/*
 !.yarn/patches

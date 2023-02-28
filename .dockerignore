@@ -1,6 +1,13 @@
 .obsidian/
 .vscode/
-dist/
-node_modules/
-.editorconfig
 .hintrc
+dist/
+
+# Using Yarn Zero-Installs
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
