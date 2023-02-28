@@ -1,5 +1,11 @@
 # Base TP3 Tiw8 2021-2022
 
+## Installation en local
+
+**Attention !** Ce projet utilise Yarn version **Berry** (>= 2.0.0), qui doit être déjà installé (par exemple globalement).
+
+---
+
 Sujet : https://aurelient.github.io/tiw8/2021/TP3/
 
 L'objectif est de réaliser un clone simplifié de [Gathertown](https://www.gather.town/).
