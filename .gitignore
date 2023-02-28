@@ -5,6 +5,15 @@ npm-debug.log
 .DS_Store
 /*.env
 
+########## YARN ##########
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
 ########## OBSIDIAN ##########
 .obsidian/*
 !.obsidian/app.json
