@@ -5,14 +5,10 @@ EXPOSE 3000
 
 WORKDIR /app
 
-COPY package.json ./
-COPY yarn.lock ./
+COPY . .
 
 RUN corepack enable
 RUN yarn install
-
-COPY . .
-
 RUN yarn build
 
 ENV NODE_ENV=production
