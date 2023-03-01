@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const windmill = require('@windmill/react-ui/config')
-const colors = require('tailwindcss/colors')
+import windmill from '@windmill/react-ui/config'
+import colors from 'tailwindcss/colors'
 
-module.exports = windmill({
+export default windmill({
   purge: {
     enabled: true,
     // in the content prop you should put all the files

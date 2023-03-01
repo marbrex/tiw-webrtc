@@ -16,3 +16,5 @@ dist
 ########## OBSIDIAN ##########
 .obsidian/*
 !.obsidian/app.json
+
+.parcel-cache

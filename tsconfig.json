@@ -1,11 +1,14 @@
 {
     "compilerOptions": {
         "jsx": "react",
-        "module": "commonjs",
+        "module": "ES2015",
         "allowJs": true,
         "esModuleInterop": true,
+        "forceConsistentCasingInFileNames": true,
         "noImplicitAny": true,
         "outDir": "./dist/",
+        "rootDir": "./client",
+        "moduleResolution": "node",
         "preserveConstEnums": true,
         "removeComments": true,
         "sourceMap": true,
