@@ -3,10 +3,7 @@
 > Eldar Kasmamytov p1712650  
 > (Je suis en monôme)  
 
-<br/>
-
 ## Installation
----
 
 ### Avec Docker
 Vous pouvez installer l'application en local avec Docker, l'image est sur mon [repo DockerHub](https://hub.docker.com/r/marbrex/react-webrtc).  
@@ -24,10 +21,7 @@ L'application sera accessible sur http://localhost:3000/
 
 > **Attention !** Ce projet utilise Yarn version **Berry** (>= 2.0.0), qui doit être déjà installé (par exemple globalement).  
 
-<br/>
-
 ## Commandes utiles
----
 
 - `make` execute ces cibles par ordre :  
 
@@ -41,10 +35,7 @@ L'application sera accessible sur http://localhost:3000/
 
 > Pour les commandes Docker, rendez-vous sur le [DOCKER.md](DOCKER.md).  
 
-<br/>
-
 ## Fonctionnalités à noter
----
 
 - **Connexion multi-peer** (en data et en vidéo).  
   Signaling entre plusieurs Peers.  
@@ -62,10 +53,7 @@ L'application sera accessible sur http://localhost:3000/
 
   > **Remarque:** La connexion vidéo s'active dès que l'utilisateur a donné les permissions d'utilsier la caméra et le microphone. Il n'y a pas de condition de proximité, la connexion vidéo est globale sur toute la carte.
 
-<br/>
-
 ## Déploiement
----
 
 L'application n'est pas déployée au public sur Internet.  
 
