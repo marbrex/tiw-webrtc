@@ -41,7 +41,7 @@ L'application sera accessible sur http://localhost:3000/
   Signaling entre plusieurs Peers.  
 
   Vous pouvez suivre la procédure de signaling en détails dans la console de votre navigateur.  
-  Examples: [Initiator Peer logs](assets/peer1-logs.png) et [Responder Peer logs](assets/peer2-logs.png)  
+  Examples: [Initiator Peer logs](assets/peer2-logs.png) et [Responder Peer logs](assets/peer1-logs.png)  
 
   ![Multi-peer](assets/multi-peer.png)  
 
