@@ -14,6 +14,14 @@
   "version": "1.0.0",
   "main": "index.mjs",
   "license": "MIT",
+  "author": {
+    "name": "Eldar Kasmamytov",
+    "email": "eldar.kasmamytov@etu.univ-lyon1.fr"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://forge.univ-lyon1.fr/p1712650/tiw-webrtc.git"
+  },
   "dependencies": {
     "@heroicons/react": "^1.0.4",
     "@reduxjs/toolkit": "^1.7.0-rc.0",
