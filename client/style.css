@@ -35,10 +35,20 @@ button {
 	padding: 5px;
 }
 
+#video-container > * {
+	margin: 5px 0px;
+}
+
+#video-container > *:first-child {
+	margin: 0px 0px 5px 0px;
+}
+
+#video-container > *:last-child {
+	margin: 5px 0px 0px 0px;
+}
+
 .video-frame {
-	width: 200px;
-	height: 200px;
-	padding: 10px;
+	border: 3px solid #614be8;
 	border-radius: 5px;
 	overflow: hidden;
 }
